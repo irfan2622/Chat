@@ -9,3 +9,4 @@ pdf2image
 Pillow
 python-docx
 faiss-cpu
+PyPDF2
