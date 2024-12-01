@@ -23,11 +23,16 @@ DRIVE_FOLDER_URL = "https://drive.google.com/drive/folders/1PbTbPboHnqs-eCr63gzY
 
 # Fungsi untuk membuat layanan Google Drive
 def create_drive_service():
+    # Membaca kredensial dari file JSON
+    with open(GOOGLE_CREDENTIALS_PATH, 'r') as json_file:
+        credentials_info = json.load(json_file)
+    
     credentials = service_account.Credentials.from_service_account_info(
-        json.loads(GOOGLE_CREDENTIALS_JSON), scopes=["https://www.googleapis.com/auth/drive"]
+        credentials_info, scopes=["https://www.googleapis.com/auth/drive"]
     )
     service = build("drive", "v3", credentials=credentials)
     return service
+
 
 # Fungsi untuk mengambil ID folder dari URL
 def extract_folder_id(folder_url):
