@@ -14,6 +14,7 @@ from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
 from pdf2image import convert_from_path
 import io
 import json
+import streamlit as st
 
 # JSON kredensial Google disematkan dalam kode
 GOOGLE_CREDENTIALS_JSON = 'google_credentials.json'
