@@ -24,10 +24,18 @@ DRIVE_FOLDER_URL = "https://drive.google.com/drive/folders/1PbTbPboHnqs-eCr63gzY
 
 # Fungsi untuk membuat layanan Google Drive menggunakan Streamlit Secrets
 def create_drive_service():
-    credentials_info = json.loads(st.secrets["google_credentials"])  # Membaca kredensial dari Streamlit Secrets
+    # Get credentials info from Streamlit secrets
+    credentials_info = st.secrets["google_credentials"]
+
+    # Convert the AttrDict to a plain Python dictionary
+    credentials_info_dict = dict(credentials_info)
+
+    # Use the credentials dictionary to create the credentials object
     credentials = service_account.Credentials.from_service_account_info(
-        credentials_info, scopes=["https://www.googleapis.com/auth/drive"]
+        credentials_info_dict, scopes=["https://www.googleapis.com/auth/drive"]
     )
+
+    # Build the Google Drive API service
     service = build("drive", "v3", credentials=credentials)
     return service
 
