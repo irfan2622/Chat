@@ -167,7 +167,6 @@ def chatbot(queries, index, sentence_model, sentences, summaries, top_k=3):
 # Fungsi utama
 if __name__ == '__main__':
     print("Membuat layanan Google Drive...")
-    service = create_drive_service()
 
     print("Mengambil ID folder dari URL yang disematkan...")
     try:
@@ -181,12 +180,12 @@ if __name__ == '__main__':
 
     if index is None:
         print("Mendapatkan daftar file dari folder Google Drive...")
-        file_urls, file_types = list_files_in_folder(service, folder_id)
+        file_urls, file_types = list_files_in_folder(folder_id)
         if not file_urls:
             print("Tidak ada file ditemukan di folder.")
         else:
             print("Memproses file untuk membuat chatbot...")
-            index, sentence_model, sentences, summaries = create_chatbot_from_files(service, file_urls, file_types)
+            index, sentence_model, sentences, summaries = create_chatbot_from_files(file_urls, file_types)
             if index is not None:
                 save_data(index, sentence_model, sentences, summaries)
             else:
