@@ -16,28 +16,10 @@ import io
 import json
 import streamlit as st
 
-# JSON kredensial Google disematkan dalam kode
-GOOGLE_CREDENTIALS_JSON = 'google_credentials.json'
+
 
 # Link folder Google Drive yang akan digunakan (tanam langsung dalam kode)
 DRIVE_FOLDER_URL = "https://drive.google.com/drive/folders/1PbTbPboHnqs-eCr63gzYrTC1Ub0XwSaw"
-
-# Fungsi untuk membuat layanan Google Drive menggunakan Streamlit Secrets
-def create_drive_service():
-    # Get credentials info from Streamlit secrets
-    credentials_info = st.secrets["google_credentials"]
-
-    # Convert the AttrDict to a plain Python dictionary
-    credentials_info_dict = dict(credentials_info)
-
-    # Use the credentials dictionary to create the credentials object
-    credentials = service_account.Credentials.from_service_account_info(
-        credentials_info_dict, scopes=["https://www.googleapis.com/auth/drive"]
-    )
-
-    # Build the Google Drive API service
-    service = build("drive", "v3", credentials=credentials)
-    return service
 
 
 # Fungsi untuk mengambil ID folder dari URL
@@ -48,7 +30,7 @@ def extract_folder_id(folder_url):
     raise ValueError("Invalid folder URL. Please provide a valid Google Drive folder URL.")
 
 # Fungsi untuk mendapatkan daftar file dalam folder
-def list_files_in_folder(service, folder_id):
+def list_files_in_folder(folder_id):
     query = f"'{folder_id}' in parents and trashed = false"
     results = service.files().list(q=query, fields="files(id, name, mimeType)").execute()
     files = results.get("files", [])
@@ -57,7 +39,7 @@ def list_files_in_folder(service, folder_id):
     return file_urls, file_types
 
 # Fungsi untuk mengekstrak teks dari file TXT
-def extract_text_from_txt(service, file_url):
+def extract_text_from_txt(file_url):
     file_id = file_url.split('/')[-2]
     request = service.files().get_media(fileId=file_id)
     file_path = '/tmp/temp.txt'
@@ -70,7 +52,7 @@ def extract_text_from_txt(service, file_url):
     return text
 
 # Fungsi untuk mengekstrak teks dari file PDF yang dipindai (OCR)
-def extract_text_from_scanned_pdf(service, file_url):
+def extract_text_from_scanned_pdf(file_url):
     file_id = file_url.split('/')[-2]
     request = service.files().get_media(fileId=file_id)
     file_path = '/tmp/temp.pdf'
@@ -85,7 +67,7 @@ def extract_text_from_scanned_pdf(service, file_url):
     return text
 
 # Fungsi untuk mengekstrak teks dari file DOCX
-def extract_text_from_scanned_docx(service, file_url):
+def extract_text_from_scanned_docx(file_url):
     file_id = file_url.split('/')[-2]
     request = service.files().get_media(fileId=file_id)
     file_path = '/tmp/temp.docx'
@@ -111,7 +93,7 @@ def extract_text_from_scanned_docx(service, file_url):
     return text
 
 # Fungsi untuk mengekstrak teks dari file CSV
-def extract_text_from_csv(service, file_url):
+def extract_text_from_csv(file_url):
     file_id = file_url.split('/')[-2]
     request = service.files().get_media(fileId=file_id)
     file_path = '/tmp/temp.csv'
