@@ -1,0 +1,13 @@
+{
+  "type": "service_account",
+  "project_id": "rare-terminal-430703-m5",
+  "private_key_id": "0d2d0d633623561af240376e200a2448351278bd",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCcd7ETgsSnLn8h\nHwvEApTiEGDR8gmRQBTN9jXDKJonlvwc+fbdlsxmpUJSM27Inoej5tVOJ94AixTZ\nqZHrTFrH3UZNznCf/1z1NgIJnwND9M4GY+PYCuYiInBfykReZeofotor7JRZYJgh\ncolwJ+N9UOkTYMVK5q79OQxorer5XC/mV569+bvT3JIoQxz1oPTEOqElQFPk3bD8\nWduK9q50oYp40qt1021vXz/q/tTyu31wQAqjPXOBMetYaraVWYgZ+zipofk30App\n8Tsu3p6vYPUGtF2HdhjivTcfCrldgfaVNkUBQcCp4IZKfnA6jXVVFRnxgVK86utH\n/w0iQa2lAgMBAAECggEAQL2xsj4AeqBdj+nVp3PeALAAL75zQPt/4DzIwAiTyF/L\nz32KLOPRjYNBrtuDMlWOED5Z8i3CyPzDUtC8BN0iDuK6zUTnCvzRjNCdBTgbVMn9\nWV2JkAHqeSNA1hHOOjT3K8HpfhU0yMqUB/rpbVPD6D1LQ25eFADhVPt+6+1SdXyO\n39QE882228EsYq8LhrEsUruYUX0iROkkjm8/xm6+JKSMpUA6kdO4zPVnzURWZLgu\nFO70BOKYn0AaCXXav585xWvLVAtVAidO5sYHmr5/2SwlpZBqxmHbyEYkJs4l/2Xo\nAKqeiqUjKV0fYoF/Z/VV6tl2zdjB1dlACb5endwQnQKBgQDJ58aTUivmNESL4L2h\nJtzbyolTZNU4H/9k6seP7qJ/hiuvEGIVSrO0MCRZudPFP9MyuTwznjdU87ha2BYv\ngrlQnhCJcUlqflUg7HZwphGDhKycEfrd1EJ3Lq5zSOfeGe7h1fG18X7B03Kkx22Y\nPohrnPyQQJDNSPmLVsIoZiPsywKBgQDGY3CqX6qnE7QBS82qDNJcs/JIXqXGQ+zU\nyn7HmywVcp8x0cT6QcJ5ITAvt+SvYEwGIMlueeuzKHtzKgQcYV6yCROG2CPoLcaK\nO+f1Vw7OkbEVL0/r9PpE6SSKVZ5qpGhK5vzku3XeKLhSezsx5s8kldKuTudA79vo\ncZG0RjJxTwKBgEB/0mftsChyOhOVT/7TM2rjYMtLQvITBrtuZSIN0ct7SSk7ypmS\nq6W8W2BuhMBWi1mA40J6IKL62MHslenHkPu4AwBlOFbU1M0XvR5vbtjc4WdaNxH2\nZOU9/GzHtYq2LiHm/rho1V2F9vG8473m/B2koOpUNe3eihmBNbVCK+fRAoGAa3Z6\nFQ/1NMOrgfg5059WY/jliOYcDiXFKA74Vc9sNcH9EdN7S8RLP6oGnBKUwZr8E2W3\nNyy7zDRliqB70ZO849uexDBYYvBI16BTqcYaszKgJcWXGU1+M83GiViPk1yzUb+F\nxbD1y/1quuMd0Y4hLsQpd1ouUjKbgHHkZy6PLGkCgYEAmbI0sYqfiSUlBWLkqB0l\nHrY7cGmavN7kQ95ERibhKcAXksaDm93Kjpwn5ELYNTVdy1RZBXbF9MnL6n2cP1Zj\ngJC+AN5b4Hsqb+C1v3cvNKR6hVVmkRV9y1ZvVyuTnhq9V8cNpjGyK3gnNNvKBvW5\nMEWl9hoV7NkoKmgr1jcX1Tc=\n-----END PRIVATE KEY-----\n",
+  "client_email": "drive-access-service-account@rare-terminal-430703-m5.iam.gserviceaccount.com",
+  "client_id": "114634400590162572392",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/drive-access-service-account%40rare-terminal-430703-m5.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}
