@@ -1,25 +1,16 @@
-import os
-import time
-import pickle
-import pytesseract
-from googleapiclient.discovery import build
-from google.oauth2 import service_account
+import requests
 from sentence_transformers import SentenceTransformer
-from PyPDF2 import PdfReader
-from PIL import Image
-import docx
-import csv
 import faiss
 from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
 from pdf2image import convert_from_path
+import pytesseract
+import docx
+import csv
+from PyPDF2 import PdfReader
+from PIL import Image
 import io
-import json
-import streamlit as st
-
-
-
-# Link folder Google Drive yang akan digunakan (tanam langsung dalam kode)
-DRIVE_FOLDER_URL = "https://drive.google.com/drive/folders/1PbTbPboHnqs-eCr63gzYrTC1Ub0XwSaw"
+import os
+import pickle
 
 
 # Fungsi untuk mengambil ID folder dari URL
@@ -29,51 +20,46 @@ def extract_folder_id(folder_url):
         return folder_id
     raise ValueError("Invalid folder URL. Please provide a valid Google Drive folder URL.")
 
-# Fungsi untuk mendapatkan daftar file dalam folder
-def list_files_in_folder(folder_id):
-    query = f"'{folder_id}' in parents and trashed = false"
-    results = service.files().list(q=query, fields="files(id, name, mimeType)").execute()
-    files = results.get("files", [])
-    file_urls = [f"https://drive.google.com/file/d/{file['id']}/view" for file in files if "id" in file]
-    file_types = [file["mimeType"] for file in files if "mimeType" in file]
-    return file_urls, file_types
+# Fungsi untuk mendapatkan daftar file dalam folder publik
+def list_files_in_folder_public(folder_id):
+    url = f"https://www.googleapis.com/drive/v3/files?q='{folder_id}'+in+parents&fields=files(id,name,mimeType)&key=YOUR_API_KEY"
+    response = requests.get(url)
+    if response.status_code == 200:
+        files = response.json().get("files", [])
+        file_urls = [f"https://drive.google.com/uc?id={file['id']}" for file in files]
+        file_types = [file['mimeType'] for file in files]
+        return file_urls, file_types
+    else:
+        print(f"Error fetching file list: {response.status_code} - {response.text}")
+        return [], []
+
+# Fungsi untuk mengunduh file publik
+def download_file(file_url, file_path):
+    response = requests.get(file_url, stream=True)
+    if response.status_code == 200:
+        with open(file_path, 'wb') as f:
+            for chunk in response.iter_content(chunk_size=1024):
+                if chunk:
+                    f.write(chunk)
+        return file_path
+    else:
+        raise ValueError(f"Failed to download file: {response.status_code}")
 
 # Fungsi untuk mengekstrak teks dari file TXT
-def extract_text_from_txt(file_url):
-    file_id = file_url.split('/')[-2]
-    request = service.files().get_media(fileId=file_id)
-    file_path = '/tmp/temp.txt'
-    with open(file_path, 'wb') as f:
-        f.write(request.execute())
-
+def extract_text_from_txt(file_path):
     with open(file_path, 'r', encoding='utf-8') as f:
-        text = f.read()
-
-    return text
+        return f.read()
 
 # Fungsi untuk mengekstrak teks dari file PDF yang dipindai (OCR)
-def extract_text_from_scanned_pdf(file_url):
-    file_id = file_url.split('/')[-2]
-    request = service.files().get_media(fileId=file_id)
-    file_path = '/tmp/temp.pdf'
-    with open(file_path, 'wb') as f:
-        f.write(request.execute())
-    
+def extract_text_from_scanned_pdf(file_path):
     images = convert_from_path(file_path)
     text = ""
     for image in images:
         text += pytesseract.image_to_string(image)
-    
     return text
 
 # Fungsi untuk mengekstrak teks dari file DOCX
-def extract_text_from_scanned_docx(file_url):
-    file_id = file_url.split('/')[-2]
-    request = service.files().get_media(fileId=file_id)
-    file_path = '/tmp/temp.docx'
-    with open(file_path, 'wb') as f:
-        f.write(request.execute())
-    
+def extract_text_from_scanned_docx(file_path):
     doc = docx.Document(file_path)
     text = ""
     for para in doc.paragraphs:
@@ -93,13 +79,7 @@ def extract_text_from_scanned_docx(file_url):
     return text
 
 # Fungsi untuk mengekstrak teks dari file CSV
-def extract_text_from_csv(file_url):
-    file_id = file_url.split('/')[-2]
-    request = service.files().get_media(fileId=file_id)
-    file_path = '/tmp/temp.csv'
-    with open(file_path, 'wb') as f:
-        f.write(request.execute())
-
+def extract_text_from_csv(file_path):
     with open(file_path, 'r', newline='', encoding='utf-8') as f:
         reader = csv.reader(f)
         text = ""
@@ -107,99 +87,79 @@ def extract_text_from_csv(file_url):
             text += " ".join(row) + "\n"
     return text
 
-# Fungsi untuk preprocessing teks (misal, membagi ke kalimat)
+# Fungsi preprocessing teks
 def preprocess_text(text):
     return text.split('\n')
 
-# Fungsi untuk merangkum teks menggunakan IndoBART
+# Fungsi untuk merangkum teks
 def create_summary_with_hf(text):
     tokenizer = AutoTokenizer.from_pretrained("facebook/bart-large-cnn")
     model = AutoModelForSeq2SeqLM.from_pretrained("facebook/bart-large-cnn")
-
     inputs = tokenizer.encode("summarize: " + text, return_tensors="pt", max_length=1024, truncation=True)
     outputs = model.generate(inputs, max_length=150, min_length=30, length_penalty=2.0, num_beams=4, early_stopping=True)
-    summary = tokenizer.decode(outputs[0], skip_special_tokens=True)
-    return summary
+    return tokenizer.decode(outputs[0], skip_special_tokens=True)
 
-# Fungsi untuk menyimpan data
-def save_data(index, sentence_model, sentences, summaries, filepath='chatbot_data.pkl'):
-    with open(filepath, 'wb') as f:
-        pickle.dump((index, sentence_model, sentences, summaries), f)
-    print(f"Data saved to {filepath}")
+# Fungsi utama untuk memproses file dan membuat chatbot
+def create_chatbot_from_public_folder(folder_id):
+    file_urls, file_types = list_files_in_folder_public(folder_id)
+    if not file_urls:
+        print("No files found in the public folder.")
+        return None, None, None, None
 
-# Fungsi untuk memuat data
-def load_data(filepath='chatbot_data.pkl'):
-    if os.path.exists(filepath):
-        with open(filepath, 'rb') as f:
-            index, sentence_model, sentences, summaries = pickle.load(f)
-        print(f"Data loaded from {filepath}")
-        return index, sentence_model, sentences, summaries
-    return None, None, None, None
+    all_sentences = []
+    summaries = []
 
-# Fungsi untuk chatbot
-def chatbot(queries, index, sentence_model, sentences, summaries, top_k=3):
-    query_embeddings = sentence_model.encode(queries)
-    D, I = index.search(query_embeddings, k=top_k)
+    for file_url, file_type in zip(file_urls, file_types):
+        print(f"Processing file: {file_url}")
 
-    responses = []
-    for query, indices in zip(queries, I):
-        relevant_sentences = []
-        relevant_summaries = []
+        # Unduh file sementara
+        temp_file_path = f"/tmp/temp_file.{file_type.split('/')[-1]}"
+        download_file(file_url, temp_file_path)
 
-        for idx in indices:
-            if 0 <= idx < len(sentences):
-                relevant_sentences.append(sentences[idx])
-                summary = summaries[idx] if idx < len(summaries) and summaries[idx] != "Ringkasan tidak tersedia." else ""
-                if summary:
-                    relevant_summaries.append(summary)
-
-        if relevant_sentences:
-            combined_sentences = " ".join(relevant_sentences[:2])
-            combined_summaries = " ".join(relevant_summaries[:2]) if relevant_summaries else "Tidak ada ringkasan yang relevan."
-            response = f"Pertanyaan: {query}\nJawaban: {combined_sentences}\n\nRingkasan: {combined_summaries}"
+        # Ekstrak teks berdasarkan jenis file
+        if file_type == "application/pdf":
+            file_text = extract_text_from_scanned_pdf(temp_file_path)
+        elif file_type == "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
+            file_text = extract_text_from_scanned_docx(temp_file_path)
+        elif file_type == "text/csv":
+            file_text = extract_text_from_csv(temp_file_path)
+        elif file_type == "text/plain":
+            file_text = extract_text_from_txt(temp_file_path)
         else:
-            response = f"Pertanyaan: {query}\nJawaban: Tidak ada konten relevan yang ditemukan."
+            print(f"Unsupported file type: {file_type}")
+            continue
 
-        responses.append(response)
+        os.remove(temp_file_path)  # Hapus file sementara
 
-    return responses
+        if file_text:
+            sentences = preprocess_text(file_text)
+            all_sentences.extend(sentences)
+            text_to_summarize = file_text[:1000] if len(file_text) > 1000 else file_text
+            summaries.append(create_summary_with_hf(text_to_summarize))
+        else:
+            summaries.append("Ringkasan tidak tersedia.")
+
+    # Buat model embedding dan FAISS index
+    sentence_model = SentenceTransformer('all-MPNet-base-v2')
+    all_embeddings = sentence_model.encode(all_sentences)
+    dimension = all_embeddings.shape[1]
+    index = faiss.IndexFlatL2(dimension)
+    index.add(all_embeddings)
+
+    return index, sentence_model, all_sentences, summaries
 
 # Fungsi utama
 if __name__ == '__main__':
-    print("Membuat layanan Google Drive...")
+    folder_url = input("Masukkan URL folder Google Drive: ")
+    folder_id = extract_folder_id(folder_url)
 
-    print("Mengambil ID folder dari URL yang disematkan...")
-    try:
-        folder_id = extract_folder_id(DRIVE_FOLDER_URL)
-        print(f"Folder ID berhasil diambil: {folder_id}")
-    except ValueError as e:
-        print(f"Error: {e}")
-        exit()
-
-    index, sentence_model, sentences, summaries = load_data()
-
-    if index is None:
-        print("Mendapatkan daftar file dari folder Google Drive...")
-        file_urls, file_types = list_files_in_folder(folder_id)
-        if not file_urls:
-            print("Tidak ada file ditemukan di folder.")
-        else:
-            print("Memproses file untuk membuat chatbot...")
-            index, sentence_model, sentences, summaries = create_chatbot_from_files(file_urls, file_types)
-            if index is not None:
-                save_data(index, sentence_model, sentences, summaries)
-            else:
-                print("Gagal membuat chatbot.")
-                exit()
-
+    index, sentence_model, sentences, summaries = create_chatbot_from_public_folder(folder_id)
     if index is not None:
-        print("Chatbot siap digunakan!")
+        print("Chatbot siap digunakan.")
         while True:
-            queries = input("Masukkan pertanyaan Anda (pisahkan dengan ';', atau ketik 'exit' untuk keluar): ").split(';')
+            queries = input("Masukkan pertanyaan Anda: ").split(';')
             if 'exit' in queries:
-                print("Keluar dari chatbot.")
                 break
-
             responses = chatbot(queries, index, sentence_model, sentences, summaries)
             for response in responses:
                 print(response)
