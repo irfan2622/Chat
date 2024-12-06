@@ -132,8 +132,90 @@ def process_single_file(service, file_id, file_name, mime_type):
         st.error(f"Error memproses file {file_name}: {str(e)}")
         return None, None
 
+# Fungsi untuk inisialisasi data default
+def initialize_default_data():
+    # Data default tentang berbagai topik
+    default_texts = [
+        # Bank Jago
+        "Bank Jago adalah bank digital di Indonesia yang menyediakan layanan perbankan melalui aplikasi mobile.",
+        "Aplikasi Jago dapat diunduh melalui Google Play Store untuk Android dan App Store untuk iOS.",
+        "Bank Jago menawarkan berbagai layanan seperti tabungan, transfer, pembayaran, dan kartu debit.",
+        "Untuk membuka rekening di Bank Jago, pengguna cukup mengunduh aplikasi dan melakukan verifikasi data.",
+        "Bank Jago memiliki fitur Pocket yang memungkinkan pengguna mengorganisir keuangan dalam berbagai kategori.",
+        
+        # GitHub
+        "GitHub adalah platform hosting kode yang memungkinkan kolaborasi dan kontrol versi menggunakan Git.",
+        "Repository di GitHub bisa bersifat publik atau private untuk menyimpan dan mengelola kode.",
+        "Pull Request untuk review dan merge kode di GitHub.",
+        "Issues untuk tracking bug dan diskusi di GitHub.",
+        "GitHub Actions untuk otomatisasi workflow.",
+        "GitHub Copilot adalah AI assistant untuk coding.",
+        "Fork untuk membuat salinan repository di GitHub.",
+        
+        # Laptop
+        "Laptop adalah komputer portabel yang bisa dibawa dan digunakan di mana saja.",
+        "Komponen utama laptop meliputi processor, RAM, storage, dan layar.",
+        "Processor laptop umumnya menggunakan Intel Core atau AMD Ryzen.",
+        "RAM laptop menentukan kemampuan multitasking, umumnya 8GB hingga 32GB.",
+        "Storage: SSD untuk kecepatan, HDD untuk kapasitas.",
+        "Battery life 4-12 jam sesuai penggunaan.",
+        "Laptop gaming memiliki kartu grafis dedicated untuk performa tinggi.",
+        
+        # Bumi
+        "Bumi adalah planet ketiga dari Matahari dalam tata surya kita.",
+        "Bulan adalah satelit alami Bumi.",
+        "Atmosfer: 78% nitrogen, 21% oksigen.",
+        "Medan magnet Bumi melindungi dari radiasi.",
+        "70% permukaan Bumi adalah lautan.",
+        "Rotasi 24 jam, revolusi 365.25 hari.",
+        "Inti Bumi: padat dan cair.",
+        "Lapisan: kerak, mantel, inti.",
+        "Lempeng tektonik penyebab gempa dan gunung berapi."
+    ]
+    
+    # Buat ringkasan untuk setiap teks
+    default_summaries = [
+        # Bank Jago summaries
+        "Bank Jago adalah bank digital Indonesia dengan layanan mobile banking.",
+        "Aplikasi Jago tersedia di Play Store dan App Store.",
+        "Bank Jago menyediakan layanan tabungan, transfer, pembayaran, dan kartu debit.",
+        "Pembukaan rekening Bank Jago melalui aplikasi dengan verifikasi data.",
+        "Fitur Pocket membantu mengorganisir keuangan dalam kategori.",
+        
+        # GitHub summaries
+        "GitHub adalah platform hosting kode dengan fitur kolaborasi dan version control.",
+        "Repository GitHub bisa public atau private untuk manajemen kode.",
+        "Pull Request untuk review dan merge kode di GitHub.",
+        "Issues untuk tracking bug dan diskusi di GitHub.",
+        "GitHub Actions untuk otomatisasi workflow.",
+        "GitHub Copilot adalah AI assistant untuk coding.",
+        "Fork untuk membuat salinan repository di GitHub.",
+        
+        # Laptop summaries
+        "Laptop adalah komputer portabel untuk mobilitas.",
+        "Komponen laptop: processor, RAM, storage, layar.",
+        "Processor laptop: Intel Core atau AMD Ryzen.",
+        "RAM laptop 8GB-32GB untuk multitasking.",
+        "Storage: SSD untuk kecepatan, HDD untuk kapasitas.",
+        "Battery life 4-12 jam sesuai penggunaan.",
+        "Laptop gaming dengan GPU dedicated.",
+        
+        # Bumi summaries
+        "Bumi adalah planet ketiga dari Matahari.",
+        "Bulan adalah satelit alami Bumi.",
+        "Atmosfer: 78% nitrogen, 21% oksigen.",
+        "Medan magnet Bumi melindungi dari radiasi.",
+        "70% permukaan Bumi adalah lautan.",
+        "Rotasi 24 jam, revolusi 365.25 hari.",
+        "Inti Bumi: padat dan cair.",
+        "Lapisan: kerak, mantel, inti.",
+        "Lempeng tektonik penyebab gempa dan gunung berapi."
+    ]
+    
+    return default_texts, default_summaries
+
 # Initialize atau update data chatbot
-def initialize_or_update_chatbot_data(new_text, new_summary):
+def initialize_or_update_chatbot_data(new_text=None, new_summary=None):
     try:
         # Inisialisasi model
         sentence_model = SentenceTransformer('all-MiniLM-L6-v2')
@@ -141,11 +223,19 @@ def initialize_or_update_chatbot_data(new_text, new_summary):
         # Load data yang sudah ada (jika ada)
         if os.path.exists('chatbot_data.pkl'):
             old_index, _, old_texts, old_summaries = load_data()
-            texts = old_texts + new_text
-            summaries = old_summaries + [new_summary]
+            if new_text and new_summary:
+                texts = old_texts + new_text
+                summaries = old_summaries + [new_summary]
+            else:
+                texts = old_texts
+                summaries = old_summaries
         else:
-            texts = new_text
-            summaries = [new_summary]
+            # Jika tidak ada data dan tidak ada input baru, gunakan data default
+            if not new_text or not new_summary:
+                texts, summaries = initialize_default_data()
+            else:
+                texts = new_text
+                summaries = [new_summary]
         
         # Buat embeddings dan index baru
         embeddings = sentence_model.encode(texts)
@@ -333,7 +423,12 @@ def init_google_drive():
 service = init_google_drive()
 
 #Bagian Streamlit
-st.title("Document-based Chatbot")
+st.title("Smart Assistant")
+st.write("Selamat datang! Silakan ajukan pertanyaan tentang berbagai topik yang Anda inginkan.")
+
+# Inisialisasi data jika belum ada
+if 'chatbot_data_loaded' not in st.session_state or not st.session_state.chatbot_data_loaded:
+    initialize_or_update_chatbot_data()
 
 # Tab untuk upload file dan tanya jawab
 tab1, tab2 = st.tabs(["Upload File", "Tanya Jawab"])
