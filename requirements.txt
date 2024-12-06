@@ -10,3 +10,12 @@ Pillow
 python-docx
 faiss-cpu
 PyPDF2
+os
+pickle
+PyPDF2
+PIL
+docx
+csv
+io
+googleapiclient.http
+numpy
